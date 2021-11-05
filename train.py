@@ -46,7 +46,7 @@ opt.valid_interval = 1
 opt.checkpoints_dir = os.path.join("./checkpoints/", opt.exp_name)
 # 可视化参数
 opt.visualize_size = 1
-opt.visualize_batch = 400
+opt.visualize_batch = 500
 opt.visualize_dir = os.path.join(opt.checkpoints_dir, 'train_phase') 
 # 测试参数, 测试直接把结果写出来
 opt.test_save_dir = "./generated/{}".format(opt.exp_name)
@@ -203,7 +203,7 @@ for epoch in range(1, opt.total_epochs + 1):
 			_, valid_psnr, valid_ssim = valid_evaluator.get()
 			if(valid_psnr > max_psnr):
 				max_psnr = valid_psnr
-				save_name = "epoch_{}_psnr_{:.3f}_ssim_{:.3f}".format(epoch, valid_psnr, valid_ssim)
+				save_name = "epoch_{}_psnr_{:.3f}_ssim_{:.3f}.pth".format(epoch, valid_psnr, valid_ssim)
 				max_psnr_checkpoint = os.path.join(opt.checkpoints_dir, save_name)
 				torch.save({"network_G": network_G.state_dict(), "network_F": network_F.state_dict()}, max_psnr_checkpoint)
 				print('\nsaved to ===> {}\n'.format(max_psnr_checkpoint))
