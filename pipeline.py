@@ -29,7 +29,7 @@ class ImageDataset(Dataset):
 	# numpy->torch.Tensor
 	transform = lambda x: torch.from_numpy(x).permute(2, 0, 1).type(torch.FloatTensor).div(255)
 	# torch.Tensor->numpy
-	restore = lambda x: torch.clamp(x.detach().cpu().mul(255).permute(0, 2, 3, 1), 0, 1).numpy().astype('uint8')
+	restore = lambda x: torch.clamp(x.detach().permute(0, 2, 3, 1), 0, 1).cpu().mul(255).numpy().astype('uint8')
 
 	def __init__(self, images_list):
 		self.images_list = images_list

@@ -67,10 +67,10 @@ train_images_list, valid_images_list, test_images_list = pipeline.get_unpaired_t
 A_images_list, B_images_list = train_images_list
 print('A  :  {}\nB  :  {}\nvalid  :  {}\ntest  :  {}'.format(len(A_images_list), len(B_images_list), len(valid_images_list), len(test_images_list)))
 # valid
-valid_dataset = pipeline.PairedImageDataset(valid_images_list, augment=False, target_size=opt.low_size)
+valid_dataset = pipeline.PairedImageDataset(valid_images_list, augment=False, target_size=None)
 valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=opt.valid_batch_size)
 # test
-test_dataset = pipeline.PairedImageDataset(test_images_list, augment=False, target_size=opt.low_size)
+test_dataset = pipeline.PairedImageDataset(test_images_list, augment=False, target_size=None)
 test_dataloader = DataLoader(test_dataset, shuffle=False, batch_size=opt.test_batch_size)
 # train
 train_dataset = pipeline.UnpairedImageDataset(A_images_list, B_images_list, augment=True, target_size=opt.low_size)
@@ -141,7 +141,7 @@ for epoch in range(1, opt.total_epochs + 1):
 			# 计算循环一致性损失
 			loss_cycle = loss_fn_cycle(fake_cycle_A, A_image) + loss_fn_cycle(fake_cycle_B, B_image)
 			# 优化生成器时的总损失
-			total_loss = loss_D_max + 10.0 * loss_cycle
+			total_loss = 1.0 * loss_D_max + 10.0 * loss_cycle
 			total_loss.backward(retain_graph=True)
 			# w -= lr * gradient
 			optimizer_G.step()
@@ -205,7 +205,7 @@ for epoch in range(1, opt.total_epochs + 1):
 				max_psnr = valid_psnr
 				save_name = "epoch_{}_psnr_{:.3f}_ssim_{:.3f}.pth".format(epoch, valid_psnr, valid_ssim)
 				max_psnr_checkpoint = os.path.join(opt.checkpoints_dir, save_name)
-				torch.save({"network_G": network_G.state_dict(), "network_F": network_F.state_dict()}, max_psnr_checkpoint)
+				torch.save({"network_G": network_G.state_dict()}, max_psnr_checkpoint)
 				print('\nsaved to ===> {}\n'.format(max_psnr_checkpoint))
 
 # ------------------------------- 开始测试 --------------------------------------
