@@ -6,3 +6,10 @@ a basic inplementation of cyclegan.
 
 还有我的网络结构不是我想要的
 
+
+
+
+
+第一次的结果，不是很高，效果一般
+
+![image-20211106094510701](images/image-20211106094510701.png)

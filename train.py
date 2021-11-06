@@ -23,7 +23,7 @@ import architectures
 # 参数
 opt = lambda: None
 # 训练
-opt.gpu_id = "0"
+opt.gpu_id = "1"
 opt.use_cuda = int(opt.gpu_id) >= 0 and torch.cuda.is_available()
 opt.lr = 1e-4
 opt.optimizer = torch.optim.Adam
@@ -34,7 +34,7 @@ opt.valid_batch_size = 1
 opt.test_batch_size = 1
 # 数据
 opt.dataset_name = 'fiveK'
-opt.dataset_dir = "D:/data/datasets/MIT-Adobe_FiveK/png"
+opt.dataset_dir = "/home/dongxuan/datasets/MIT-Adobe_FiveK/"
 opt.A_dir = "input"
 opt.B_dir = "expertC_gt"
 opt.data_split = "./datasets/fiveK_split_new_unpaired.pkl"
@@ -81,8 +81,8 @@ train_dataloader = DataLoader(train_dataset, shuffle=False, batch_size=opt.train
 # ------------------------------- 定义网络结构 --------------------------------------
 network_G = architectures.Generator()
 network_F = architectures.Generator()
-network_D_A = architectures.Discriminator()
-network_D_B = architectures.Discriminator()
+network_D_A = architectures.Discriminator(opt.low_size)
+network_D_B = architectures.Discriminator(opt.low_size)
 
 # 送到 GPU
 if(opt.use_cuda):
