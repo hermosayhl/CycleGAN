@@ -1,3 +1,2 @@
 *.exe
-*.pth
-git.sh
+*.pyc

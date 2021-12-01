@@ -1,0 +1,1 @@
+ python train.py --name FiveKNewSplit --model cycle_gan

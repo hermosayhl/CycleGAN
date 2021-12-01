@@ -1,10 +1,12 @@
 # Python
 import os
+import numpy
 import random
 import datetime
 # 3rd party
-import numpy
 import torch
+
+
 
 
 def set_seed(seed, gpu_id):
@@ -17,17 +19,49 @@ def set_seed(seed, gpu_id):
     numpy.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
+    torch.set_num_threads(4)
     torch.set_default_tensor_type(torch.FloatTensor)
     return torch
 
 
 # 为 torch 数据随机做准备
-GLOBAL_SEED = 19980212
+GLOBAL_SEED = 19981229
 GLOBAL_WORKER_ID = None
 def worker_init_fn(worker_id):
     global GLOBAL_WORKER_ID
     GLOBAL_WORKER_ID = worker_id
     set_seed(GLOBAL_SEED + worker_id)
+
+
+
+
+class ImagePool():
+    def __init__(self, pool_size):
+        self.pool_size = pool_size
+        if self.pool_size > 0: 
+            self.num_imgs = 0
+            self.images = []
+
+    def query(self, images):
+        if self.pool_size == 0: 
+            return images
+        return_images = []
+        for image in images:
+            image = torch.unsqueeze(image.data, 0)
+            if self.num_imgs < self.pool_size:  
+                self.num_imgs = self.num_imgs + 1
+                self.images.append(image)
+                return_images.append(image)
+            else:
+                p = random.uniform(0, 1)
+                if p > 0.5: 
+                    random_id = random.randint(0, self.pool_size - 1)  
+                    tmp = self.images[random_id].clone()
+                    self.images[random_id] = image
+                    return_images.append(tmp)
+                else:     
+                    return_images.append(image)
+        return torch.cat(return_images, 0) 
 
 
 
@@ -45,12 +79,21 @@ class Timer:
 
 
 
-# 可视化
-def visualize_a_batch(batch_images, save_path, total_size=16):
-    row = int(math.sqrt(batch_images.shape[0]))
-    # tensor -> numpy
-    batch_images = torch.clamp(batch_images.detach().cpu().permute(0, 2, 3, 1), 0, 1).mul(255).numpy().astype('uint8')
-    # (16, 512, 512, 3) -> [4 * 512, 4 * 512, 3]
-    composed_images = numpy.concatenate([numpy.concatenate([batch_images[row * i + j] for j in range(row)], axis=1) for i in range(row)], axis=0)
-    cv2.imwrite(save_path, composed_images)
 
+
+# 暂时冻住某些网络的参数
+class FreezeScope:
+    def __init__(self, freeze_list):
+        self.freeze_list = freeze_list
+
+    def __enter__(self):
+    	# 冻结
+    	for some_network in self.freeze_list:
+	        for param in some_network.parameters():
+	            param.requires_grad = False
+
+    def __exit__(self, type, value, trace):
+        # 恢复
+    	for some_network in self.freeze_list:
+	        for param in some_network.parameters():
+	            param.requires_grad = True
