@@ -68,7 +68,7 @@ class AlignedDataset(torch.utils.data.Dataset):
 		return torch.from_numpy(x).permute(2, 0, 1).type(torch.FloatTensor).div(255)
 
 	def restore(self, x):
-		return x.detach().cpu().mul(255).permute(0, 2, 3, 1).numpy().astype('uint8')
+		return x.detach().cpu().mul(255).permute(1, 2, 0).numpy().astype('uint8')
 
 	def __init__(self, images_list, mode='valid'):
 		super(AlignedDataset, self).__init__()
@@ -102,13 +102,13 @@ class UnAlignedDataset(torch.utils.data.Dataset):
 	def restore(self, x):
 		return x.detach().cpu().mul(255).permute(0, 2, 3, 1).numpy().astype('uint8')
 
-	def __init__(self, A_images_list, B_images_list, mode='train'):
+	def __init__(self, A_images_list, B_images_list, mode='train', low_res=[256, 256]):
 		super(UnAlignedDataset, self).__init__()
 
 		self.A_images_list = A_images_list
 		self.B_images_list = B_images_list
-
 		self.mode = mode
+		self.low_res = tuple(low_res)
 
 	def __len__(self):
 		return len(self.A_images_list)
@@ -126,8 +126,8 @@ class UnAlignedDataset(torch.utils.data.Dataset):
 		low_quality, high_quality = make_augment(low_quality, high_quality)
 
 		# train 可能需要 batch, 所以这里要归一化
-		low_quality = cv2.resize(low_quality, (256, 256))
-		high_quality = cv2.resize(high_quality, (256, 256))
+		low_quality = cv2.resize(low_quality, self.low_res)
+		high_quality = cv2.resize(high_quality, self.low_res)
 
 		return {'A': self.transform(low_quality), 'B': self.transform(high_quality), 'A_paths': input_path, 'B_paths': input_path}
 
@@ -136,14 +136,17 @@ class UnAlignedDataset(torch.utils.data.Dataset):
 
 
 def get_unpaired_training_data(opt):
+	dataset_dir = opt.datasets.dataset_dir
+	A_dir = opt.datasets.A_dir
+	B_dir = opt.datasets.B_dir
 	# 读取数据划分
-	with open(opt.data_split, 'rb') as reader:
+	with open(opt.datasets.data_split_file, 'rb') as reader:
 		data_split = pickle.load(reader)
 		# 处理成对的数据, test 跟 valid
-		test_images_list = [(os.path.join(opt.dataset_dir, opt.A_dir, image_name), os.path.join(opt.dataset_dir, opt.B_dir, image_name)) for image_name in data_split['test']]
-		valid_images_list = [(os.path.join(opt.dataset_dir, opt.A_dir, image_name), os.path.join(opt.dataset_dir, opt.B_dir, image_name)) for image_name in data_split['valid']]
+		test_images_list = [(os.path.join(dataset_dir, A_dir, image_name), os.path.join(dataset_dir, B_dir, image_name)) for image_name in data_split['test']]
+		valid_images_list = [(os.path.join(dataset_dir, A_dir, image_name), os.path.join(dataset_dir, B_dir, image_name)) for image_name in data_split['valid']]
 		# 处理非成对的数据
-		A_images_list = [os.path.join(opt.dataset_dir, opt.A_dir, image_name) for image_name in data_split['train_A']]
-		B_images_list = [os.path.join(opt.dataset_dir, opt.B_dir, image_name) for image_name in data_split['train_B']]
+		A_images_list = [os.path.join(dataset_dir, A_dir, image_name) for image_name in data_split['train_A']]
+		B_images_list = [os.path.join(dataset_dir, B_dir, image_name) for image_name in data_split['train_B']]
 		# 返回列表
 		return (A_images_list, B_images_list), valid_images_list, test_images_list

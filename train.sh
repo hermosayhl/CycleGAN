@@ -1,1 +1,1 @@
- python train.py --name FiveKNewSplit --model cycle_gan
+ python train.py -opt ./options/train/train_fivek_unpaired.yaml

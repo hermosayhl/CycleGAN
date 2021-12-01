@@ -147,3 +147,58 @@ class NLayerDiscriminator(nn.Module):
         return self.model(input)
 
 
+
+
+
+
+class Discriminator(nn.Module):
+    def __init__(self, low_res=(256, 256)):
+        super(Discriminator, self).__init__()
+
+        self.low_res = tuple(low_res)
+        self.down_sampler = nn.Upsample(size=self.low_res, mode='bilinear', align_corners=True)
+        self.conv_1 = nn.Sequential(
+            nn.Conv2d(3, 64, 3, stride=2, padding=1),
+            nn.InstanceNorm2d(64), 
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        self.conv_2 = nn.Sequential(
+            nn.Conv2d(64, 128, 3, stride=2, padding=1),
+            nn.InstanceNorm2d(128), 
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        self.conv_3 = nn.Sequential(
+            nn.Conv2d(128, 256, 3, stride=2, padding=1),
+            nn.InstanceNorm2d(256), 
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        self.conv_4 = nn.Sequential(
+            nn.Conv2d(256, 512, 3, stride=2, padding=1),
+            nn.InstanceNorm2d(512), 
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        self.fc = nn.Conv2d(512, 1, kernel_size=3, padding=1)
+        self.apply(init_func)
+
+
+    def forward(self, x):
+
+        if(tuple(x.shape[1:-1]) != self.low_res):
+            x = self.down_sampler(x)
+
+        x = self.conv_1(x)
+        x = self.conv_2(x)
+        x = self.conv_3(x)
+        x = self.conv_4(x)
+        x = self.fc(x)
+
+        return x
+
+
+
+
+if __name__ == '__main__':
+    
+    x = torch.randn(4, 3, 256, 256).cuda()
+    netD_B = Discriminator().cuda()
+    print(netD_B(x).shape)

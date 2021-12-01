@@ -34,6 +34,20 @@ def worker_init_fn(worker_id):
 
 
 
+def dict2object(d):  
+    top = type('new', (object,), d)  
+    seqs = tuple, list, set, frozenset  
+    for i, j in d.items():  
+        if isinstance(j, dict):  
+            setattr(top, i, dict2object(j))  
+        elif isinstance(j, seqs):  
+            setattr(top, i,   
+                type(j)(dict2object(sj) if isinstance(sj, dict) else sj for sj in j))  
+        else:  
+            setattr(top, i, j)  
+    return top 
+
+
 
 class ImagePool():
     def __init__(self, pool_size):

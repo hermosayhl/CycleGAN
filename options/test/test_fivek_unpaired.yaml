@@ -1,0 +1,22 @@
+name: test_fivek_expertC_16x16
+
+common:
+  use_cuda: True
+  gpu_id: 0
+
+datasets:
+  dataset_dir: D:/data/datasets/MIT-Adobe_FiveK/png
+  A_dir: input 
+  B_dir: expertC_gt
+  data_split_file: ./datasets/train_fivek_expertC.pkl
+  low_res: [256, 256]
+
+test: 
+  test_batch_size: 1
+
+model:
+  netG_A2B_path: ./checkpoints/train_fivek_expertC/cyclegan_epoch_25_20.573.pth
+
+intermediate:
+  save: True
+  output_dir: "./generated"
