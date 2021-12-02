@@ -62,7 +62,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # 开始测试
 with torch.no_grad():
-    for test_batch, data in enumerate(test_loader):
+    for test_batch, data in enumerate(test_loader, 1):
         real_A = data['A']
         if(use_cuda): real_A = real_A.cuda()
         enhanced = netG_A2B(real_A)
@@ -72,3 +72,4 @@ with torch.no_grad():
             cv2.imwrite(os.path.join(output_dir, os.path.split(data['A_paths'][0])[-1]), test_dataset.restore(enhanced.squeeze(0)))
         sys.stdout.write('\rTest==> [batch {}/{}] [loss {:.3f}] [mse {:.3f}] [psnr {:.3f}] [ssim {:.4f}]'.format(
             test_batch, len(test_loader), *test_evaluator.get()))
+# Test==> [batch 500/500] [loss 0.011] [mse 721.647] [psnr 21.586] [ssim 0.8551]

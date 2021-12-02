@@ -15,7 +15,7 @@ test:
   test_batch_size: 1
 
 model:
-  netG_A2B_path: ./checkpoints/train_fivek_expertC/cyclegan_epoch_25_20.573.pth
+  netG_A2B_path: ./checkpoints/train_fivek_expertC_16x16/cyclegan_epoch_93_21.743.pth
 
 intermediate:
   save: True

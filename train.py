@@ -18,7 +18,7 @@ import pipeline
 import evaluate
 import architectures
 
-# 是否 use_cuda 这里还没有写好
+# 接收命令行参数
 yaml_path = sys.argv[2]
 if(not os.path.exists(yaml_path)):
     yaml_path = "./options/train/train_fivek_unpaired.yaml"
@@ -67,8 +67,10 @@ valid_loader = torch.utils.data.DataLoader(
 # 设定网络结构
 netG_A2B = architectures.Generator()
 netG_B2A = architectures.Generator()
+# 原来这个判别器可以
 # netD_B = architectures.NLayerDiscriminator(3, 64, n_layers=3, norm_layer=functools.partial(nn.InstanceNorm2d, affine=False, track_running_stats=False))
 # netD_A = architectures.NLayerDiscriminator(3, 64, n_layers=3, norm_layer=functools.partial(nn.InstanceNorm2d, affine=False, track_running_stats=False))
+# 换这个自己的判别器效果不高
 netD_B = architectures.Discriminator(low_res=opt.datasets.low_res)
 netD_A = architectures.Discriminator(low_res=opt.datasets.low_res)
 
@@ -102,7 +104,7 @@ schedulers_G = lr_scheduler.CosineAnnealingLR(optimizer_G, T_max=opt.train.total
 schedulers_D = lr_scheduler.CosineAnnealingLR(optimizer_D, T_max=opt.train.total_epochs, eta_min=0)
 
 # 图像增强的评价指标
-train_evaluator = evaluate.ImageEnhanceEvaluator()
+train_evaluator = evaluate.ImageEnhanceEvaluator(psnr_only=True)
 
 # 临时变量, 判断是真是假, 不必每次临时分配(换判别器的话, 这里也要换)
 discrim_size = tuple(netD_A(torch.randn(1, 3, *opt.datasets.low_res).cuda()).shape[-2:])
@@ -179,7 +181,7 @@ for epoch in range(1, opt.train.total_epochs + 1):
             loss_D_B = (loss_D_real + loss_D_fake) * opt.train.weight_discriminator
             # backward, 计算梯度
             loss_D_B.backward()
-            # --------- 【2】 训练判别器 B2A
+            # --------- 【2】 训练判别器 A
             # 从前若干个 batch 历史 A 生成图像中选一个
             fake_A_history = fake_A_pool.query(fake_A)
             # 判别器对 real_A 和 fake_A_history 判定
@@ -204,10 +206,8 @@ for epoch in range(1, opt.train.total_epochs + 1):
             composed = torch.cat([up_image, down_image], axis=-2)
             composed = (torch.clamp(composed, 0, 1).permute(1, 2, 0).numpy() * 255).astype('uint8')
             save_path = os.path.join(opt.intermediate.visualize_dir, 'epoch_{}_batch_{}.png'.format(epoch, train_batch))
-            print("saved images to===>  {}".format(save_path))
+            # print("saved images to===>  {}".format(save_path))
             cv2.imwrite(save_path, composed)
-
-        if(train_batch == 200): break
 
         train_loss_logger.update(loss_G_A2B.item(), loss_G_B2A.item(), loss_D_B.item(), loss_D_A.item(), loss_cycle_A2B2A.item(), loss_cycle_B2A2B.item())
 

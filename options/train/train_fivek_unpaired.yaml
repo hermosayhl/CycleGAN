@@ -6,7 +6,8 @@ common:
   deterministic: False
 
 datasets:
-  dataset_dir: D:/data/datasets/MIT-Adobe_FiveK/png
+  # dataset_dir: D:/data/datasets/MIT-Adobe_FiveK/png
+  dataset_dir: /home/dongxuan/datasets/MIT-Adobe_FiveK
   A_dir: input 
   B_dir: expertC_gt
   data_split_file: ./datasets/train_fivek_expertC.pkl
@@ -32,5 +33,5 @@ valid:
 intermediate:
   save_interval: 1
   checkpoints_dir: "./checkpoints/"
-  visualize_batch: 4000
+  visualize_batch: 1000
   visualize_dir: "train_phase"
