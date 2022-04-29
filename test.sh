@@ -1,1 +1,0 @@
- python test.py -opt ./options/test/test_fivek_unpaired.yaml
